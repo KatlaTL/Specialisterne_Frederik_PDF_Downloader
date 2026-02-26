@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PDF_Downloader.MainPage"
+             Title="PDF Downloader">
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="12">
+            <Label Text="PDF Downloader" 
+                   Style="{StaticResource Headline}" />
+
+            <Label Text="Input Excel File Path" />
+            <Entry x:Name="InputFileEntry" 
+                   Placeholder="C:\path\to\demo.xlsx" />
+
+            <Label Text="Output Folder Path" />
+            <Entry x:Name="OutputFolderEntry" Placeholder="C:\path\to\downloads" />
+
+            <Button x:Name="RunButton"
+                    Text="Run Downloader"
+                    Clicked="OnRunDownloaderClicked"
+                    HorizontalOptions="Fill" />
+
+            <ActivityIndicator x:Name="BusyIndicator" IsVisible="False" IsRunning="False" />
+            <Label x:Name="StatusLabel" Text="Ready." LineBreakMode="WordWrap" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,90 +1,43 @@
-using System;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using MiniExcelLibs;
-using MiniExcelLibs.Attributes;
+﻿using PDF_Downloader.Services;
 
+namespace PDF_Downloader;
 
-var inputFile = "demo.xlsx";
-var outputFolder = "";
-
-var httpClient = new HttpClient();
-
-
-using (var stream = File.OpenRead(inputFile))
+public static class DownloaderRunner
 {
-    var rows = stream.Query<Demo>().ToList();
-    var rowNumber = rows.Count;
+    // Console-friendly entry utility that wires dependencies and runs the workflow.
+    public static async Task RunAsync(string inputFile, string outputFolder, CancellationToken cancellationToken = default)
+    {
+        using var httpClient = new HttpClient();
+
+        IExcelLinkReader linkReader = new ExcelLinkReader();
+        IPdfDownloadService downloadService = new PdfDownloadService(httpClient);
+        var rowProcessor = new DownloadRowProcessor(downloadService);
+        var application = new PdfDownloaderApplication(linkReader, rowProcessor);
+
+        await application.RunAsync(inputFile, outputFolder, cancellationToken);
+    }
+}
+
+
+/*
+    1.
+    UI starts in MainPage.xaml with input path, output path, and Run Downloader.
     
-    for (int i = 1; i < rowNumber; i++)
-    {
-        Console.WriteLine(rows[i].A);
-        string mainDownloadLink = rows[i].A;
-        string altDownloadLink = rows[i].B;
-
-        if (!string.IsNullOrWhiteSpace(mainDownloadLink))
-        {
-            var downloadedFromMain = await TryDownloadPdfAsync(httpClient, mainDownloadLink);
-
-            if (!downloadedFromMain && !string.IsNullOrWhiteSpace(altDownloadLink))
-            {
-                Console.WriteLine($"Main download failed. Trying alt link: {altDownloadLink}");
-                await TryDownloadPdfAsync(httpClient, altDownloadLink);
-            }
-        }
-        else if (!string.IsNullOrWhiteSpace(altDownloadLink))
-        {
-            await TryDownloadPdfAsync(httpClient, altDownloadLink);
-        }
-    }
-}
-
-static async Task<bool> TryDownloadPdfAsync(HttpClient httpClient, string downloadUrl)
-{
-    if (string.IsNullOrWhiteSpace(downloadUrl) ||
-        !Uri.TryCreate(downloadUrl, UriKind.Absolute, out Uri? downloadLink) ||
-        downloadLink.IsFile)
-    {
-        return false;
-    }
-
-    string extension = Path.GetExtension(downloadLink.AbsolutePath);
-    if (!extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
-    {
-        return false;
-    }
-
-    try
-    {
-        using HttpResponseMessage response = await httpClient.GetAsync(downloadLink);
-        if (!response.IsSuccessStatusCode)
-        {
-            return false;
-        }
-
-        string fileName = Path.GetFileName(downloadLink.LocalPath);
-
-        await using var downloadStream = await httpClient.GetStreamAsync(downloadLink);
-        await using var fileStream = new FileStream(fileName, FileMode.Create, FileAccess.Write);
-        await downloadStream.CopyToAsync(fileStream);
-        await fileStream.FlushAsync();
-        return true;
-    }
-    catch
-    {
-        return false;
-    }
-}
-
-
-
-public class Demo
-{
-    [ExcelColumnIndex("AL")]
-    public string A { get; set; }
-    [ExcelColumnIndex("AM")]
-    public string B { get; set; }
-}
+    2.
+    Click handler in MainPage.xaml.cs validates paths, sets busy state, then calls _application.RunAsync(...).
+    
+    3.
+    PdfDownloaderApplication.cs reads rows from Excel and processes them with max 5 concurrent workers.
+    
+    4.
+    ExcelLinkReader.cs maps Excel rows to LinkRow objects and skips the header row.
+    
+    5.
+    LinkRow.cs maps Excel AL to main link and AM to fallback link.
+    
+    6.
+    DownloadRowProcessor.cs tries main link first, then fallback link if main fails.
+    
+    7.
+    PdfDownloadService.cs validates URL and .pdf, downloads with HttpClient, and writes file to output folder.
+*/
