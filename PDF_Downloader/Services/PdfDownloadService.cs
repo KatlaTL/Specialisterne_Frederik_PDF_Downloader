@@ -1,5 +1,6 @@
 namespace PDF_Downloader.Services;
 
+
 public sealed class PdfDownloadService : IPdfDownloadService
 {
     private readonly HttpClient _httpClient;
@@ -12,6 +13,7 @@ public sealed class PdfDownloadService : IPdfDownloadService
     public async Task<bool> TryDownloadAsync(
         string downloadUrl,
         string outputFolder,
+        string idName,
         CancellationToken cancellationToken = default)
     {
         // Reject empty/invalid/local paths before any network call.
@@ -19,6 +21,7 @@ public sealed class PdfDownloadService : IPdfDownloadService
             !Uri.TryCreate(downloadUrl, UriKind.Absolute, out Uri? downloadLink) ||
             downloadLink.IsFile)
         {
+            Console.WriteLine("Null or empty download link");
             return false;
         }
 
@@ -26,6 +29,7 @@ public sealed class PdfDownloadService : IPdfDownloadService
         string extension = Path.GetExtension(downloadLink.AbsolutePath);
         if (!extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
         {
+            Console.WriteLine("Not PDF");
             return false;
         }
 
@@ -38,10 +42,11 @@ public sealed class PdfDownloadService : IPdfDownloadService
 
             if (!response.IsSuccessStatusCode)
             {
+                Console.WriteLine(response.StatusCode);
                 return false;
             }
 
-            string fileName = Path.GetFileName(downloadLink.LocalPath);
+            string fileName = idName + extension;
             if (string.IsNullOrWhiteSpace(fileName))
             {
                 return false;

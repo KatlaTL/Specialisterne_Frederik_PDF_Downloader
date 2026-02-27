@@ -6,7 +6,7 @@ namespace PDF_Downloader;
 public sealed class PdfDownloaderApplication
 {
     // Hard limit for simultaneous row processing/download attempts.
-    private const int MaxConcurrentDownloads = 5;
+    private const int MaxConcurrentDownloads = 50;
     private readonly IExcelLinkReader _linkReader;
     private readonly DownloadRowProcessor _rowProcessor;
 

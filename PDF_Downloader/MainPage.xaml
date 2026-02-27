@@ -9,12 +9,27 @@
                    Style="{StaticResource Headline}" />
 
             <Label Text="Input Excel File Path" />
-            <Entry x:Name="InputFileEntry" 
-                   Placeholder="C:\path\to\demo.xlsx" />
-
+            
+            <HorizontalStackLayout>
+                <Button
+                    Text="Input File"
+                    Clicked="InputPicker"
+                    />
+                <Entry x:Name="InputFileEntry" 
+                       Placeholder="C:\path\to\demo.xlsx" />
+            </HorizontalStackLayout>
+            
             <Label Text="Output Folder Path" />
-            <Entry x:Name="OutputFolderEntry" Placeholder="C:\path\to\downloads" />
-
+            
+            <HorizontalStackLayout>
+                <Button
+                    Text="Output Folder"
+                    Clicked="OutputPicker"
+                />
+                <Entry x:Name="OutputFolderEntry" 
+                       Placeholder="C:\path\to\downloads" />
+            </HorizontalStackLayout>
+            
             <Button x:Name="RunButton"
                     Text="Run Downloader"
                     Clicked="OnRunDownloaderClicked"

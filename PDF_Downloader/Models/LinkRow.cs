@@ -11,4 +11,7 @@ public sealed class LinkRow
     // Backup PDF URL (Excel column AM).
     [ExcelColumnIndex("AM")]
     public string? AlternativeDownloadLink { get; set; }
+    
+    [ExcelColumnIndex("A")]
+    public string? IdName { get; set; }
 }

@@ -1,4 +1,7 @@
-﻿using PDF_Downloader.Services;
+﻿using Windows.Storage.Pickers;
+using PDF_Downloader.Services;
+using CommunityToolkit.Maui.Storage;
+using MiniExcelLibs;
 
 namespace PDF_Downloader;
 
@@ -12,6 +15,10 @@ public partial class MainPage : ContentPage
     {
         InitializeComponent();
 
+        Console.WriteLine("The number of processors " +
+                          "on this computer is {0}.",
+            Environment.ProcessorCount);
+        
         IExcelLinkReader linkReader = new ExcelLinkReader();
         IPdfDownloadService downloadService = new PdfDownloadService(HttpClient);
         var rowProcessor = new DownloadRowProcessor(downloadService);
@@ -28,7 +35,8 @@ public partial class MainPage : ContentPage
         // Read and validate user input from the UI fields.
         string inputFilePath = InputFileEntry.Text?.Trim() ?? string.Empty;
         string outputFolderPath = OutputFolderEntry.Text?.Trim() ?? string.Empty;
-
+        
+        
         if (string.IsNullOrWhiteSpace(inputFilePath) || string.IsNullOrWhiteSpace(outputFolderPath))
         {
             StatusLabel.Text = "Please provide both input file path and output folder path.";
@@ -67,5 +75,35 @@ public partial class MainPage : ContentPage
         RunButton.IsEnabled = !isBusy;
         BusyIndicator.IsVisible = isBusy;
         BusyIndicator.IsRunning = isBusy;
+    }
+
+    private async void OutputPicker(object? sender, EventArgs e)
+    {
+            var folder = await CommunityToolkit.Maui.Storage.FolderPicker.PickAsync(default);
+            OutputFolderEntry.Text = folder.Folder.Path;
+    }
+
+    private async void InputPicker( object? sender, EventArgs e)
+    {
+        var customFileType =
+        	new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+        	{
+                 { DevicePlatform.Android, new[] { "application/xlsx" } },
+        		 { DevicePlatform.WinUI, new[] { ".xlsx" } },
+        });
+        
+        
+        var inputResult = await FilePicker.PickAsync(new PickOptions
+        {
+            PickerTitle = "Vælg xlsx-fil",
+            FileTypes = customFileType,
+        });
+
+        if (inputResult == null)
+            return;
+        
+        var inputText = inputResult.FullPath;
+        Console.WriteLine(inputText);
+        InputFileEntry.Text = inputText;
     }
 }
