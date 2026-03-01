@@ -4,14 +4,15 @@ namespace PDF_Downloader.Models;
 
 public sealed class LinkRow
 {
-    // Primary PDF URL (Excel column AL).
+    // Primær PDF-URL (Excel-kolonne AL).
     [ExcelColumnIndex("AL")]
     public string? MainDownloadLink { get; set; }
 
-    // Backup PDF URL (Excel column AM).
+    // Alternativ PDF-URL (Excel-kolonne AM).
     [ExcelColumnIndex("AM")]
     public string? AlternativeDownloadLink { get; set; }
     
+    // BRnum fra xlsx-fil (Excel-kolonne A).
     [ExcelColumnIndex("A")]
     public string? IdName { get; set; }
 }

@@ -1,24 +1,21 @@
-﻿using Windows.Storage.Pickers;
+﻿using CommunityToolkit.Maui.Storage;
+using PDF_Downloader.Models;
 using PDF_Downloader.Services;
-using CommunityToolkit.Maui.Storage;
-using MiniExcelLibs;
 
 namespace PDF_Downloader;
 
 public partial class MainPage : ContentPage
 {
-    // Reused client prevents socket exhaustion during many downloads.
     private static readonly HttpClient HttpClient = new();
     private readonly PdfDownloaderApplication _application;
+
+
+    // Opsætter UI-standardværdier og sammensætter appens kerneafhængigheder.
 
     public MainPage()
     {
         InitializeComponent();
 
-        Console.WriteLine("The number of processors " +
-                          "on this computer is {0}.",
-            Environment.ProcessorCount);
-        
         IExcelLinkReader linkReader = new ExcelLinkReader();
         IPdfDownloadService downloadService = new PdfDownloadService(HttpClient);
         var rowProcessor = new DownloadRowProcessor(downloadService);
@@ -30,13 +27,14 @@ public partial class MainPage : ContentPage
             "PDF_Downloader");
     }
 
+
+    // Starter hele downloadforløbet fra UI'et.
+
     private async void OnRunDownloaderClicked(object? sender, EventArgs e)
     {
-        // Read and validate user input from the UI fields.
         string inputFilePath = InputFileEntry.Text?.Trim() ?? string.Empty;
         string outputFolderPath = OutputFolderEntry.Text?.Trim() ?? string.Empty;
-        
-        
+
         if (string.IsNullOrWhiteSpace(inputFilePath) || string.IsNullOrWhiteSpace(outputFolderPath))
         {
             StatusLabel.Text = "Please provide both input file path and output folder path.";
@@ -51,11 +49,18 @@ public partial class MainPage : ContentPage
 
         try
         {
+            // Lås UI'et, så brugeren ikke starter processen flere gange parallelt.
             SetBusyState(true);
             StatusLabel.Text = "Downloading files...";
+            ProgressCounterLabel.Text = "Processed: 0/0";
 
-            // Executes the full downloader workflow (read rows + concurrent downloads).
-            await _application.RunAsync(inputFilePath, outputFolderPath);
+            // Progress<T> marshaler opdateringer tilbage til UI-tråden.
+            var progress = new Progress<DownloadProgress>(p =>
+            {
+                ProgressCounterLabel.Text = $"Processed: {p.Completed}/{p.Total}";
+            });
+
+            await _application.RunAsync(inputFilePath, outputFolderPath, progress);
 
             StatusLabel.Text = "Downloader finished.";
         }
@@ -69,30 +74,40 @@ public partial class MainPage : ContentPage
         }
     }
 
+
+    // Slår knap og loading-indikator til/fra mens processen kører.
+
     private void SetBusyState(bool isBusy)
     {
-        // Prevent duplicate runs and show progress indicator while work is in flight.
         RunButton.IsEnabled = !isBusy;
         BusyIndicator.IsVisible = isBusy;
         BusyIndicator.IsRunning = isBusy;
     }
 
+
+    // Åbner mappevælger og udfylder outputfeltet med valgt mappe.
+
     private async void OutputPicker(object? sender, EventArgs e)
     {
-            var folder = await CommunityToolkit.Maui.Storage.FolderPicker.PickAsync(default);
+        var folder = await FolderPicker.PickAsync(default);
+        if (folder.IsSuccessful && folder.Folder is not null)
+        {
             OutputFolderEntry.Text = folder.Folder.Path;
+        }
     }
 
-    private async void InputPicker( object? sender, EventArgs e)
+
+    // Åbner filvælger begrænset til Excel-filer (.xlsx).
+
+    private async void InputPicker(object? sender, EventArgs e)
     {
         var customFileType =
-        	new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-        	{
-                 { DevicePlatform.Android, new[] { "application/xlsx" } },
-        		 { DevicePlatform.WinUI, new[] { ".xlsx" } },
-        });
-        
-        
+            new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+            {
+                { DevicePlatform.Android, new[] { "application/xlsx" } },
+                { DevicePlatform.WinUI, new[] { ".xlsx" } },
+            });
+
         var inputResult = await FilePicker.PickAsync(new PickOptions
         {
             PickerTitle = "Vælg xlsx-fil",
@@ -100,10 +115,16 @@ public partial class MainPage : ContentPage
         });
 
         if (inputResult == null)
+        {
             return;
-        
-        var inputText = inputResult.FullPath;
-        Console.WriteLine(inputText);
-        InputFileEntry.Text = inputText;
+        }
+
+        if (string.IsNullOrWhiteSpace(inputResult.FullPath))
+        {
+            StatusLabel.Text = "Selected file has no accessible path.";
+            return;
+        }
+
+        InputFileEntry.Text = inputResult.FullPath;
     }
 }

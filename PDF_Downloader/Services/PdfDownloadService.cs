@@ -10,13 +10,16 @@ public sealed class PdfDownloadService : IPdfDownloadService
         _httpClient = httpClient;
     }
 
+
+    // Validerer URL, henter PDF'en og gemmer den på disk.
+
     public async Task<bool> TryDownloadAsync(
         string downloadUrl,
         string outputFolder,
         string idName,
         CancellationToken cancellationToken = default)
     {
-        // Reject empty/invalid/local paths before any network call.
+        // Afviser tomme/ugyldige links samt lokale fil-URL'er.
         if (string.IsNullOrWhiteSpace(downloadUrl) ||
             !Uri.TryCreate(downloadUrl, UriKind.Absolute, out Uri? downloadLink) ||
             downloadLink.IsFile)
@@ -25,7 +28,7 @@ public sealed class PdfDownloadService : IPdfDownloadService
             return false;
         }
 
-        // Downloader only accepts URLs that end with ".pdf".
+        // Hent kun PDF-filer.
         string extension = Path.GetExtension(downloadLink.AbsolutePath);
         if (!extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
         {
@@ -35,6 +38,7 @@ public sealed class PdfDownloadService : IPdfDownloadService
 
         try
         {
+            // Letvægtskald til statuskodekontrol før selve stream-download.
             using HttpResponseMessage response = await _httpClient.GetAsync(
                 downloadLink,
                 HttpCompletionOption.ResponseHeadersRead,
@@ -46,16 +50,17 @@ public sealed class PdfDownloadService : IPdfDownloadService
                 return false;
             }
 
+            // Filnavn baseres på BRnum.
             string fileName = idName + extension;
             if (string.IsNullOrWhiteSpace(fileName))
             {
                 return false;
             }
 
-            // Ensure target folder exists, then stream directly to disk.
             Directory.CreateDirectory(outputFolder);
             string outputPath = Path.Combine(outputFolder, fileName);
 
+            // Stream direkte til disk for at undgå unødigt memory-forbrug.
             await using Stream downloadStream = await _httpClient.GetStreamAsync(downloadLink, cancellationToken);
             await using var fileStream = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
             await downloadStream.CopyToAsync(fileStream, cancellationToken);

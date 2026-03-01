@@ -5,6 +5,7 @@ namespace PDF_Downloader;
 
 public static class MauiProgram
 {
+
     public static MauiApp CreateMauiApp()
     {
         var builder = MauiApp.CreateBuilder();
