@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace PDF_Downloader.Services;
+namespace PDF_Downloader.Core.Services;
 
 public interface IPdfDownloadService
 {

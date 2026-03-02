@@ -1,7 +1,7 @@
 using MiniExcelLibs;
-using PDF_Downloader.Models;
+using PDF_Downloader.Core.Models;
 
-namespace PDF_Downloader.Services;
+namespace PDF_Downloader.Core.Services;
 
 public sealed class ExcelLinkReader : IExcelLinkReader
 {

@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Maui.Storage;
-using PDF_Downloader.Models;
-using PDF_Downloader.Services;
+using PDF_Downloader.Core.Models;
+using PDF_Downloader.Core.Services;
+using PDF_Downloader.Core;
 
 namespace PDF_Downloader;
 

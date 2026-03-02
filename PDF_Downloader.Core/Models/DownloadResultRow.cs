@@ -1,4 +1,4 @@
-namespace PDF_Downloader.Models;
+namespace PDF_Downloader.Core.Models;
 
 public sealed class DownloadResultRow
 {

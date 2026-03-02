@@ -1,9 +1,9 @@
 using System.Data;
 using MiniExcelLibs;
-using PDF_Downloader.Models;
-using PDF_Downloader.Services;
+using PDF_Downloader.Core.Models;
+using PDF_Downloader.Core.Services;
 
-namespace PDF_Downloader;
+namespace PDF_Downloader.Core;
 
 public sealed class PdfDownloaderApplication
 {

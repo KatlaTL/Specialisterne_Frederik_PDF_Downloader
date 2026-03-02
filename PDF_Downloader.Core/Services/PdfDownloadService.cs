@@ -1,4 +1,4 @@
-namespace PDF_Downloader.Services;
+namespace PDF_Downloader.Core.Services;
 
 
 public sealed class PdfDownloadService : IPdfDownloadService
@@ -36,6 +36,14 @@ public sealed class PdfDownloadService : IPdfDownloadService
             return false;
         }
 
+        // CHANGE 
+        // Removed the check for IsNullOrWhiteSpace on filename as it was redundant because extension would always be .pdf
+        // Check if idName is IsNullOrWhiteSpace instead 
+        if (string.IsNullOrWhiteSpace(idName))
+        {
+            return false;
+        }
+
         try
         {
             // Letvægtskald til statuskodekontrol før selve stream-download.
@@ -52,10 +60,6 @@ public sealed class PdfDownloadService : IPdfDownloadService
 
             // Filnavn baseres på BRnum.
             string fileName = idName + extension;
-            if (string.IsNullOrWhiteSpace(fileName))
-            {
-                return false;
-            }
 
             Directory.CreateDirectory(outputFolder);
             string outputPath = Path.Combine(outputFolder, fileName);
