@@ -1,7 +1,7 @@
 ﻿using System.Net;
-using Moq;
-using Moq.Protected;
+using MiniExcelLibs;
 using PDF_Downloader.Core;
+using PDF_Downloader.Core.Models;
 using PDF_Downloader.Core.Services;
 using RichardSzalay.MockHttp;
 
@@ -137,7 +137,7 @@ public class PdfFlowTests
     }
 
     [Fact]
-    public async Task RunAsync_Should_HandleInvalidLinks_DownloadAlternativeLink_SavePDFs_CreateResultsExcelFile()
+    public async Task RunAsync_Should_HandleInvalidLinks_DownloadAlternativeLink_SavePDFs_CreateResultsExcelFileWithDownloadResults()
     {
         var (tempInputPath, outputPath) = SetupTestFiles("TestData_Alternative_Links.xlsx");
 
@@ -149,6 +149,17 @@ public class PdfFlowTests
             var pdfFiles = Directory.GetFiles(outputPath, "*.pdf");
 
             Assert.NotEmpty(resultFile);
+
+            var rows = MiniExcel.Query<DownloadResultRow>(resultFile.Single()).Skip(1).ToList();
+
+            Assert.Collection(rows,
+                r => Assert.Contains("Failed", r.DownloadStatus),
+                r => Assert.Contains("Success", r.DownloadStatus),
+                r => Assert.Contains("Success", r.DownloadStatus),
+                r => Assert.Contains("Failed", r.DownloadStatus),
+                r => Assert.Contains("Failed", r.DownloadStatus)
+            );
+
             Assert.NotEmpty(pdfFiles);
             Assert.Equal(2, pdfFiles.Length);
             Assert.All(pdfFiles, f => Assert.EndsWith(".pdf", f));
