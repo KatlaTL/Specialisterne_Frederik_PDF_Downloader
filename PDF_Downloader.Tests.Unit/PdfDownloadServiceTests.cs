@@ -38,7 +38,7 @@ public class PdfDownloadServiceTests
 
 
     [Fact]
-    public async Task TryDownloadAsync_downloadUrlIsEmpty_ReturnsFalse()
+    public async Task TryDownloadAsync_DownloadUrlIsEmpty_ReturnsFalse()
     {
         var row = new LinkRow { IdName = "BR123", MainDownloadLink = "", };
 
@@ -57,7 +57,7 @@ public class PdfDownloadServiceTests
     }
 
     [Fact]
-    public async Task TryDownloadAsync_downloadUrlExtensionIsNotPDF_ReturnsFalse()
+    public async Task TryDownloadAsync_DownloadUrlExtensionIsNotPDF_ReturnsFalse()
     {
         var row = new LinkRow { IdName = "BR123", MainDownloadLink = "http://example.com/file.xlsx", };
 
@@ -95,7 +95,7 @@ public class PdfDownloadServiceTests
     }
 
     [Fact]
-    public async Task TryDownloadAsync_FileNameIsEmpty_ReturnsFalse()
+    public async Task TryDownloadAsync_IdNameIsEmpty_ReturnsFalse()
     {
         var row = new LinkRow { IdName = "", MainDownloadLink = "http://example.com/file.pdf", };
 
